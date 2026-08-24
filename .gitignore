@@ -1,0 +1,30 @@
+__pycache__/
+*.py[cod]
+.DS_Store
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+dist/
+build/
+
+# Never commit Codex or browser runtime state.
+.codex/
+auth.json
+history.jsonl
+session_index.jsonl
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+sessions/
+browser/
+attachments/
+shell_snapshots/
+
+# Never commit credentials or machine-local environment files.
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
