@@ -2,7 +2,7 @@
 
 ## Status
 
-Implementation in progress.
+Completed.
 
 ## Completed
 
@@ -11,9 +11,12 @@ Implementation in progress.
 - Confirmed `khakisketch/ksi-codex` is available.
 - Replaced the default installed artifacts with the current portable baseline.
 - Added portable config modes, security boundaries, validation, and install prompt.
+- Verified the source PC with 71 passes, 0 warnings, and 0 failures.
+- Verified a fresh isolated install with 61 passes, 0 warnings, and 0 failures.
+- Re-cloned the private remote and repeated source and isolated-install checks.
+- Published private repository `https://github.com/khakisketch/ksi-codex`.
+- Published release `v1.0.0`.
 
 ## Remaining
 
-- Run compile, source, dry-run, and isolated-install checks.
-- Review final diff and secret scan.
-- Create private remote, commit, push, tag, and release.
+None.
