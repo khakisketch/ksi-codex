@@ -1,7 +1,7 @@
 # Agent inventory
 
-The current default installer installs only `explorer.toml`.
+The current installer installs every `*.toml` role in this directory.
 
-The `ksi-*.toml` files are retained as historical prototypes and are not part of
-the active portable baseline. Do not install them unless the owner explicitly
-changes the global routing policy.
+The roster mirrors the active source PC. Add a role only when it is configured
+and validated in the source environment; do not include credentials or session
+state in an agent definition.

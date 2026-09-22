@@ -68,13 +68,16 @@ class Installer:
                 target=self.codex_home / "rules" / "ksi-default.rules",
                 mode=self.mode,
             ),
-            InstallAction(
-                label="read-only explorer agent",
-                source=REPO_ROOT / "codex" / "agents" / "explorer.toml",
-                target=self.codex_home / "agents" / "explorer.toml",
-                mode=self.mode,
-            ),
         ]
+        actions.extend(
+            InstallAction(
+                label=f"agent {source.name}",
+                source=source,
+                target=self.codex_home / "agents" / source.name,
+                mode=self.mode,
+            )
+            for source in sorted((REPO_ROOT / "codex" / "agents").glob("*.toml"))
+        )
 
         if self.config_mode == "profile":
             actions.append(

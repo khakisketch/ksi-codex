@@ -1,7 +1,22 @@
-# KSI Codex safe command policy.
-# These rules are intentionally conservative and can be extended per user or project.
+# KSI Codex command policy for trusted local workspaces.
+# Commands run without approval prompts; standard immediate force-push flags are forbidden as defense in depth, not a parser-complete guarantee.
 
-prefix_rule(pattern=["git", "push"], decision="prompt", justification="Pushing code changes should be an explicit user decision.")
-prefix_rule(pattern=["git", "push", "--force"], decision="forbidden", justification="Force push is blocked by default. Ask the user for explicit approval and use a project-specific override if needed.")
-prefix_rule(pattern=["sudo"], decision="prompt", justification="Privilege escalation requires explicit review.")
-prefix_rule(pattern=["rm", "-rf"], decision="prompt", justification="Recursive deletion can destroy work and should be reviewed.")
+prefix_rule(pattern=["git", "push"], decision="allow", justification="Trusted local policy allows explicitly requested pushes without a second approval prompt.")
+prefix_rule(
+    pattern=["git", "push", ["-f", "--force", "--force-with-lease"]],
+    decision="forbidden",
+    justification="Defense-in-depth block for standard immediate force flags. This exact-prefix rule is not a parser-complete guarantee; require explicit Human authorization for the exact repository, remote, branch/ref, and force option before any force push.",
+    match=[
+        ["git", "push", "-f"],
+        ["git", "push", "--force"],
+        ["git", "push", "--force-with-lease"],
+    ],
+    not_match=[["git", "push", "origin", "main"]],
+)
+prefix_rule(pattern=["sudo"], decision="allow", justification="Trusted local policy allows explicitly requested privilege escalation without a second approval prompt.")
+prefix_rule(pattern=["rm", "-rf"], decision="allow", justification="Trusted local policy allows explicitly requested recursive deletion without a second approval prompt.")
+prefix_rule(pattern=["git", "commit"], decision="allow", justification="Trusted local policy allows explicitly requested commits without a second approval prompt.")
+prefix_rule(pattern=["git", "merge"], decision="allow", justification="Trusted local policy allows explicitly requested merges without a second approval prompt.")
+prefix_rule(pattern=["git", "cherry-pick"], decision="allow", justification="Trusted local policy allows explicitly requested cherry-picks without a second approval prompt.")
+prefix_rule(pattern=["git", "worktree", "remove"], decision="allow", justification="Trusted local policy allows explicitly requested worktree removal without a second approval prompt.")
+prefix_rule(pattern=["git", "branch", "-D"], decision="allow", justification="Trusted local policy allows explicitly requested forced branch deletion without a second approval prompt.")

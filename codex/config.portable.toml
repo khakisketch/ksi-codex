@@ -1,22 +1,26 @@
-# Portable KSI Codex behavior profile captured on 2026-08-24.
+# Portable KSI Codex behavior profile synchronized from the active source PC.
 #
 # SECURITY: approval_policy = "never" with sandbox_mode = "danger-full-access"
 # grants Codex broad local authority. Install this only on a personal machine
-# where that behavior is intentional. The installer never copies authentication,
-# history, browser sessions, project trust entries, absolute paths, or secrets.
+# where that behavior is intentional. Authentication, project trust, sessions,
+# browser state, app runtime MCPs, absolute paths, and secrets are excluded.
 
-model = "gpt-5.6-sol"
-model_reasoning_effort = "high"
+model = "gpt-6-astra"
+model_reasoning_effort = "low"
 personality = "pragmatic"
 plan_mode_reasoning_effort = "xhigh"
 approvals_reviewer = "user"
 approval_policy = "never"
 sandbox_mode = "danger-full-access"
 web_search = "live"
+service_tier = "default"
 
 [agents]
+enabled = true
+max_depth = 1
+max_concurrent_threads_per_session = 4
 default_subagent_model = "gpt-5.6-terra"
-default_subagent_reasoning_effort = "high"
+default_subagent_reasoning_effort = "medium"
 
 [plugins."google-calendar@openai-curated"]
 enabled = false
@@ -33,9 +37,6 @@ enabled = true
 [plugins."codex-app-tools@openai-bundled"]
 enabled = true
 
-[plugins."sites@openai-bundled"]
-enabled = true
-
 [plugins."browser@openai-bundled"]
 enabled = true
 
@@ -45,20 +46,32 @@ enabled = true
 [plugins."visualize@openai-bundled"]
 enabled = true
 
+[plugins."superpowers@superpowers-dev"]
+enabled = true
+
+[plugins."superpowers@openai-curated-remote"]
+enabled = false
+
+[plugins."unified-computer-use@openai-bundled"]
+enabled = true
+
 [features]
-memories = true
-hooks = false
+memories = false
+hooks = true
 js_repl = false
 network_proxy = true
 prevent_idle_sleep = true
 
 [memories]
-use_memories = true
-generate_memories = true
-disable_on_external_context = true
+use_memories = false
+generate_memories = false
+disable_on_external_context = false
 min_rate_limit_remaining_percent = 20
 
 [mcp_servers.context7]
 command = "npx"
 args = ["-y", "@upstash/context7-mcp"]
-startup_timeout_ms = 20000
+startup_timeout_sec = 20.0
+
+[mcp_servers.exa]
+url = "https://mcp.exa.ai/mcp"

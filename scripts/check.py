@@ -17,11 +17,17 @@ from typing import Iterable
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SKILL_NAMES: list[str] = []
 CUSTOM_AGENTS = {
-    "explorer.toml": {
-        "name": "explorer",
-        "model": "gpt-5.4-mini",
-        "model_reasoning_effort": "low",
-    },
+    "architect.toml": {"name": "architect", "model": "gpt-5.6-sol", "model_reasoning_effort": "high", "sandbox": "read-only"},
+    "debugger.toml": {"name": "debugger", "model": "gpt-5.5", "model_reasoning_effort": "high", "sandbox": "danger-full-access"},
+    "evidence_guardian.toml": {"name": "evidence_guardian", "model": "gpt-5.6-sol", "model_reasoning_effort": "high", "sandbox": "read-only"},
+    "explorer.toml": {"name": "explorer", "model": "gpt-5.6-luna", "model_reasoning_effort": "low", "sandbox": "read-only"},
+    "fast_worker.toml": {"name": "fast_worker", "model": "gpt-5.3-codex-spark", "model_reasoning_effort": "medium", "sandbox": "danger-full-access"},
+    "integration_reviewer.toml": {"name": "integration_reviewer", "model": "gpt-6-astra", "model_reasoning_effort": "high", "sandbox": "workspace-write"},
+    "performance_reviewer.toml": {"name": "performance_reviewer", "model": "gpt-5.6-terra", "model_reasoning_effort": "high", "sandbox": "danger-full-access"},
+    "reviewer.toml": {"name": "reviewer", "model": "gpt-5.6-sol", "model_reasoning_effort": "high", "sandbox": "workspace-write"},
+    "verifier.toml": {"name": "verifier", "model": "gpt-5.6-luna", "model_reasoning_effort": "medium", "sandbox": "workspace-write"},
+    "worker.toml": {"name": "worker", "model": "gpt-5.6-terra", "model_reasoning_effort": "high", "sandbox": "danger-full-access"},
+    "worker_complex.toml": {"name": "worker_complex", "model": "gpt-5.6-terra", "model_reasoning_effort": "xhigh", "sandbox": "danger-full-access"},
 }
 EXCLUDED_DEFAULT_PLUGINS = {
     "gmail@openai-curated",
@@ -35,13 +41,13 @@ EXPECTED_ENABLED_PLUGINS = {
     "github@openai-curated",
 }
 REQUIRED_AGENTS_FRAGMENTS = [
-    "# KSI Codex Global Routing",
-    "Use `/goal` and `/plan` before non-trivial",
-    "Use `explorer` only for bounded, read-only codebase discovery",
-    "Use the built-in `worker` for one clearly scoped implementation or testing task",
-    "Do not add standing specialized agents by default",
-    "Use Context7 for version-specific framework, library, or API behavior",
-    "Use Local Codex only for an explicitly requested design workflow",
+    "# KSI Codex Adaptive Operating Policy",
+    "Maintain a compact, current understanding",
+    "For project work inside a Git worktree",
+    "The root Codex is the Lead",
+    "Use `explorer` only for bounded, read-only discovery",
+    "Use Context7 when version-specific framework, library, or API behavior matters",
+    "Use Local Codex only for an explicitly requested Local Codex design workflow",
 ]
 
 
@@ -141,8 +147,8 @@ def check_source(reporter: Reporter) -> None:
     agents = (REPO_ROOT / "codex" / "AGENTS.md").read_text(encoding="utf-8")
     for fragment in REQUIRED_AGENTS_FRAGMENTS:
         reporter.expect(fragment in agents, f"global AGENTS.md contains {fragment!r}")
-    if len(agents.encode("utf-8")) > 12_000:
-        reporter.warn("global AGENTS.md is larger than 12KB; keep it lean")
+    if len(agents.encode("utf-8")) > 24_000:
+        reporter.warn("global AGENTS.md is larger than 24KB; keep it lean")
     else:
         reporter.pass_("global AGENTS.md size is lean")
 
@@ -151,7 +157,7 @@ def check_source(reporter: Reporter) -> None:
     if portable_config.exists():
         config_text = portable_config.read_text(encoding="utf-8")
         config = read_toml(portable_config, reporter)
-        reporter.expect(config.get("model") == "gpt-5.6-sol", "portable config model")
+        reporter.expect(config.get("model") == "gpt-6-astra", "portable config model")
         reporter.expect(
             config.get("sandbox_mode") == "danger-full-access",
             "portable config sandbox mode",
@@ -166,8 +172,8 @@ def check_source(reporter: Reporter) -> None:
             reporter.expect(excluded not in config, f"portable config excludes [{excluded}]")
         mcp_servers = config.get("mcp_servers", {})
         reporter.expect(
-            isinstance(mcp_servers, dict) and set(mcp_servers) == {"context7"},
-            "portable config includes only Context7 MCP",
+            isinstance(mcp_servers, dict) and set(mcp_servers) == {"context7", "exa"},
+            "portable config includes Context7 and Exa MCP",
         )
 
     for name in SKILL_NAMES:
@@ -196,10 +202,7 @@ def check_source(reporter: Reporter) -> None:
             data.get("model_reasoning_effort") == expected["model_reasoning_effort"],
             f"{filename} reasoning effort",
         )
-        reporter.expect(
-            data.get("sandbox_mode") == "read-only",
-            f"{filename} sandbox is read-only",
-        )
+        reporter.expect(data.get("sandbox_mode") == expected["sandbox"], f"{filename} sandbox mode")
 
     for doc in [
         "autonomy.md",
@@ -270,10 +273,10 @@ def check_installed(reporter: Reporter, home: Path) -> None:
             reporter.pass_(f"installed {expected['name']} matches portable source")
         else:
             reporter.warn(f"installed {expected['name']} differs from portable source")
-        if data.get("sandbox_mode") == "read-only":
-            reporter.pass_(f"installed {expected['name']} remains read-only")
+        if data.get("sandbox_mode") == expected["sandbox"]:
+            reporter.pass_(f"installed {expected['name']} sandbox mode is {expected['sandbox']}")
         else:
-            reporter.warn(f"installed {expected['name']} is not read-only")
+            reporter.warn(f"installed {expected['name']} sandbox mode differs from source")
 
     portable_path = REPO_ROOT / "codex" / "config.portable.toml"
     expected_config = read_toml(portable_path, reporter)
@@ -332,6 +335,9 @@ def check_plugins(reporter: Reporter, home: Path) -> None:
             reporter.pass_(f"v1-excluded plugin disabled: {name}")
 
 
+# Policy: the memory and hooks checks below are advisory warnings (exit 0).
+# Only structural validity (for example invalid JSON in hooks.json or an
+# unparseable TOML file via read_toml) is a hard failure.
 def check_memory(reporter: Reporter, home: Path) -> None:
     config_path = home / ".codex" / "config.toml"
     memories_dir = home / ".codex" / "memories"
@@ -346,16 +352,17 @@ def check_memory(reporter: Reporter, home: Path) -> None:
     memories = data.get("memories", {})
     enabled = isinstance(features, dict) and features.get("memories") is True
 
-    if enabled:
-        reporter.info("Codex memories feature enabled")
-    else:
-        reporter.info("Codex memories feature disabled")
+    if not enabled:
+        reporter.pass_("Codex memories feature disabled (cross-tool policy)")
         if memories_dir.exists() or memory_db.exists():
-            reporter.warn("memory state exists but memories feature is disabled")
-        return
+            reporter.info("memory state exists as a preserved archive; memories stay disabled")
+        else:
+            reporter.info("no memory archive present")
+    else:
+        reporter.warn("Codex memories feature is enabled; cross-tool policy requires features.memories=false")
 
     if not isinstance(memories, dict):
-        reporter.warn("memories feature enabled but [memories] config is missing")
+        reporter.info("no [memories] config section")
         return
 
     use_memories = memories.get("use_memories")
@@ -369,24 +376,32 @@ def check_memory(reporter: Reporter, home: Path) -> None:
     reporter.info(f"memories.min_rate_limit_remaining_percent={min_rate!r}")
 
     if use_memories is True:
-        reporter.pass_("memories.use_memories enabled")
+        reporter.warn("memories.use_memories is enabled; cross-tool policy requires false")
     else:
-        reporter.warn("memories.use_memories is not explicitly true")
+        reporter.pass_("memories.use_memories disabled")
 
     if generate_memories is True:
-        reporter.pass_("memories.generate_memories enabled")
+        reporter.warn("memories.generate_memories is enabled; cross-tool policy requires false")
     else:
-        reporter.warn("memories.generate_memories is not explicitly true")
+        reporter.pass_("memories.generate_memories disabled")
 
-    if disable_external is True:
-        reporter.pass_("memories.disable_on_external_context enabled")
-    else:
-        reporter.warn("memories.disable_on_external_context should be true for KSI")
 
-    if isinstance(min_rate, int) and min_rate >= 10:
-        reporter.pass_("memories.min_rate_limit_remaining_percent set")
+def check_hooks(reporter: Reporter, home: Path) -> None:
+    hooks_path = home / ".codex" / "hooks.json"
+    if not hooks_path.exists():
+        reporter.warn("~/.codex/hooks.json is not installed; SessionStart checkpoint injection inactive")
+        return
+    try:
+        data = json.loads(hooks_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as exc:
+        reporter.fail(f"~/.codex/hooks.json is not valid JSON: {exc}")
+        return
+    hooks = data.get("hooks", {}) if isinstance(data, dict) else {}
+    entries = hooks.get("SessionStart", []) if isinstance(hooks, dict) else []
+    if isinstance(entries, list) and entries:
+        reporter.pass_("hooks.json contains a SessionStart entry")
     else:
-        reporter.warn("memories.min_rate_limit_remaining_percent should be an integer >= 10")
+        reporter.warn("hooks.json has no SessionStart entry")
 
 
 def check_browser_tools(reporter: Reporter, home: Path) -> None:
@@ -520,6 +535,7 @@ def portable_config_matches(actual: dict, expected: dict) -> bool:
         "approval_policy",
         "sandbox_mode",
         "web_search",
+        "service_tier",
     ]
     if any(actual.get(key) != expected.get(key) for key in scalar_keys):
         return False
@@ -528,13 +544,17 @@ def portable_config_matches(actual: dict, expected: dict) -> bool:
         if actual.get(section) != expected.get(section):
             return False
 
-    actual_context7 = actual.get("mcp_servers", {}).get("context7", {})
-    expected_context7 = expected.get("mcp_servers", {}).get("context7", {})
+    actual_mcp = actual.get("mcp_servers", {})
+    expected_mcp = expected.get("mcp_servers", {})
+    if actual_mcp.get("exa") != expected_mcp.get("exa"):
+        return False
+    actual_context7 = actual_mcp.get("context7", {})
+    expected_context7 = expected_mcp.get("context7", {})
     if Path(str(actual_context7.get("command", ""))).name != "npx":
         return False
     return all(
         actual_context7.get(key) == expected_context7.get(key)
-        for key in ["args", "startup_timeout_ms"]
+        for key in ["args", "startup_timeout_sec"]
     )
 
 
@@ -643,6 +663,7 @@ def main(argv: Iterable[str]) -> int:
         check_installed(reporter, home)
         check_plugins(reporter, home)
         check_memory(reporter, home)
+        check_hooks(reporter, home)
         if not args.skip_browser:
             check_browser_tools(reporter, home)
     if not args.skip_mcp:

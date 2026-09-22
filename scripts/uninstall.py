@@ -14,7 +14,29 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 def digest(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    hasher = hashlib.sha256()
+    if path.is_dir():
+        for item in sorted(path.rglob("*")):
+            if "__pycache__" in item.parts:
+                continue
+            hasher.update(item.relative_to(path).as_posix().encode("utf-8"))
+            if item.is_symlink():
+                hasher.update(b"symlink")
+                hasher.update(item.readlink().as_posix().encode("utf-8"))
+            elif item.is_file():
+                hasher.update(b"file")
+                hasher.update(digest_file(item).encode("ascii"))
+            elif item.is_dir():
+                hasher.update(b"dir")
+    else:
+        hasher.update(path.read_bytes())
+    return hasher.hexdigest()
+
+
+def digest_file(path: Path) -> str:
+    hasher = hashlib.sha256()
+    hasher.update(path.read_bytes())
+    return hasher.hexdigest()
 
 
 def remove(path: Path, dry_run: bool) -> None:
@@ -37,7 +59,10 @@ def remove_if_managed(target: Path, source: Path, dry_run: bool) -> None:
     if target.is_symlink() and target.resolve() == source.resolve():
         remove(target, dry_run)
         return
-    if target.is_file() and digest(target) == digest(source):
+    if target.is_file() and source.is_file() and digest(target) == digest(source):
+        remove(target, dry_run)
+        return
+    if target.is_dir() and source.is_dir() and digest(target) == digest(source):
         remove(target, dry_run)
         return
     print(f"SKIP modified or unmanaged: {target}")
@@ -58,11 +83,12 @@ def main(argv: list[str]) -> int:
         REPO_ROOT / "codex" / "rules" / "ksi-default.rules",
         args.dry_run,
     )
-    remove_if_managed(
-        codex_home / "agents" / "explorer.toml",
-        REPO_ROOT / "codex" / "agents" / "explorer.toml",
-        args.dry_run,
-    )
+    for source_agent in sorted((REPO_ROOT / "codex" / "agents").glob("*.toml")):
+        remove_if_managed(
+            codex_home / "agents" / source_agent.name,
+            source_agent,
+            args.dry_run,
+        )
 
     if args.remove_agents:
         remove_if_managed(

@@ -7,17 +7,17 @@
 - Python 3.11 or newer
 - Codex CLI
 - GitHub CLI for convenient access to the private repository
-- Node.js and `npx` if Context7 MCP should be active
+- Node.js and `npx` if Context7 MCP should be active; Exa requires its own account connection
 
 Use the same GitHub identity that has access to `khakisketch/ksi-codex`.
 
 ## Installer scope
 
-The installer manages four files at most:
+The installer manages four areas:
 
 ```text
 ~/.codex/AGENTS.md
-~/.codex/agents/explorer.toml
+~/.codex/agents/*.toml
 ~/.codex/rules/ksi-default.rules
 ~/.codex/ksi.config.toml or ~/.codex/config.toml
 ```
@@ -43,8 +43,8 @@ does not exist.
 
 ### `skip`
 
-Installs instructions, the explorer agent, and command rules without installing
-a config file.
+Installs the global instructions, complete agent roster, and command rules
+without installing a config file.
 
 ## Conflict and backup policy
 
@@ -65,9 +65,10 @@ After the portable files are installed:
 1. Sign in to Codex normally on the new PC.
 2. Confirm `node` and `npx` exist for Context7.
 3. Restart Codex.
-4. Reconnect plugins and OAuth-backed apps manually.
+4. Reconnect plugins and OAuth-backed apps manually, including Exa if it requests authentication.
 5. Clone each project repository so its repository-owned `AGENTS.md` files are present.
 6. Add project trust entries locally; do not copy another PC's absolute paths.
+7. Trust Continuity hooks once with `/hooks` inside the Codex TUI and re-trust after any hook edit. Native memory stays intentionally disabled by the cross-tool continuity policy; keep the existing memories archive instead of deleting it.
 
 ## Uninstall
 

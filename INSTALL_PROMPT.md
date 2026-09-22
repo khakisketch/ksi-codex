@@ -10,7 +10,7 @@ be installed.
 https://github.com/khakisketch/ksi-codex
 
 목표:
-- 현재 PC의 Codex 전역 지침, read-only explorer 에이전트, command rules,
+- 현재 PC의 Codex 전역 지침, 구성된 전체 role agent roster, command rules,
   휴대 가능한 기본 설정을 안전하게 설치합니다.
 - 이 작업은 로컬 Codex 설정 설치만 허용합니다. 프로젝트 코드 변경이나
   원격 저장소 쓰기, 임의의 플러그인/OAuth 연결은 하지 마세요.
@@ -29,7 +29,7 @@ https://github.com/khakisketch/ksi-codex
    `./install.sh --dry-run --mode copy --config-mode replace --backup`
 6. dry-run 대상이 아래 범위를 벗어나면 중단하세요:
    - ~/.codex/AGENTS.md
-   - ~/.codex/agents/explorer.toml
+   - ~/.codex/agents/*.toml
    - ~/.codex/rules/ksi-default.rules
    - ~/.codex/config.toml
    - ~/.codex/backups/

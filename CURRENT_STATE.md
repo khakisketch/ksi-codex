@@ -1,21 +1,21 @@
 # Captured source state
 
-Captured on 2026-08-24 from the owner's Linux Codex environment.
+Synchronized on 2026-09-22 from the owner's active Linux Codex environment.
 
 ## Reproduced by the installer
 
-- Codex CLI behavior target: `0.149.0`
-- Global instructions: exact file copy
-- `explorer` custom agent: exact file copy
+- Codex CLI behavior target: `0.155.1`
+- Global instructions: exact file copy from `~/.codex/AGENTS.md`
+- Configured role roster: exact `*.toml` copies from `~/.codex/agents/`
 - KSI command rules: exact file copy
 - Portable config values:
   - model and reasoning defaults
   - personality
   - approval and sandbox behavior
-  - default subagent model and effort
+  - multi-agent limits, default subagent model and effort
   - plugin enable/disable preferences
   - memory feature preferences
-  - Context7 MCP using portable `npx`
+  - Context7 MCP using portable `npx` and Exa MCP endpoint
 
 ## Deliberately not reproduced
 
@@ -25,6 +25,7 @@ Captured on 2026-08-24 from the owner's Linux Codex environment.
 - hook trusted hashes
 - app-specific approval records and generated app identifiers
 - `node_repl` MCP because it is supplied by the local Codex app runtime
+- `hooks.json` because its command points to a machine-local OpenCode harness path
 - `open-design` / Local Codex MCP because it depends on a separate local design project
 - browser profiles and existing signed-in sessions
 

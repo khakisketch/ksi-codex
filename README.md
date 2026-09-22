@@ -3,7 +3,8 @@
 Private, portable KSI Codex configuration for reproducing the owner's active
 Codex behavior on another personal computer.
 
-The portable baseline was captured on 2026-08-24 from Codex CLI `0.149.0`.
+The portable baseline is synchronized from the active source PC and targets
+Codex CLI `0.155.1` behavior.
 It installs only durable behavior configuration. Authentication, sessions,
 memories, browser profiles, project trust paths, absolute machine paths, and
 other local state are deliberately excluded.
@@ -11,16 +12,16 @@ other local state are deliberately excluded.
 ## Managed baseline
 
 - `~/.codex/AGENTS.md`: concise KSI global routing
-- `~/.codex/agents/explorer.toml`: one bounded read-only explorer
+- `~/.codex/agents/*.toml`: the complete configured role roster
 - `~/.codex/rules/ksi-default.rules`: conservative command rules
 - optional portable Codex config as either:
   - `~/.codex/ksi.config.toml` for `codex --profile ksi`
   - `~/.codex/config.toml` for matching default behavior
-- Context7 MCP through portable `npx -y @upstash/context7-mcp`
+- Context7 MCP through portable `npx -y @upstash/context7-mcp` and Exa MCP URL
 - plugin enable/disable preferences; plugin login and connection state are not copied
 
-The older `skills/`, `presets/`, and `codex/agents/ksi-*.toml` files remain as
-historical reference and are not installed by the current default installer.
+The repository's historical `skills/` and `presets/` remain reference material;
+the active agent roster under `codex/agents/` is installed as a unit.
 
 ## Security boundary
 
